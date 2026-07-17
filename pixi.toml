@@ -1,0 +1,18 @@
+[workspace]
+name = "pixi-code"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[dependencies]
+nodejs = ">=24,<25"
+python = ">=3.13,<3.14"
+pip = "*"
+
+[tasks]
+install = "npm install"
+compile-tests = { cmd = "npm run compile-tests", depends-on = ["install"] }
+lint = { cmd = "npm run lint", depends-on = ["install"] }
+format-check = { cmd = "npm exec prettier -- --check src package.json package-lock.json tsconfig.json webpack.config.js", depends-on = ["install"] }
+check = { depends-on = ["compile-tests", "lint", "format-check"] }
+package = { cmd = "npm run package", depends-on = ["install"] }
+vsix = { cmd = "npx @vscode/vsce package --no-dependencies", depends-on = ["package"] }
