@@ -1,5 +1,7 @@
 import { Package } from '@vscode/python-environments';
 import * as ch from 'child_process';
+import * as fs from 'fs-extra';
+import * as path from 'path';
 import { CancellationError, CancellationToken, ThemeIcon, Uri, window, workspace } from 'vscode';
 import which from 'which';
 
@@ -97,6 +99,38 @@ export async function listPixiPackages(envName: string, projectPath: string): Pr
     return JSON.parse(stdout);
 }
 
+function quoteSh(value: string): string {
+    return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
+async function ensurePythonShim(
+    projectPath: string,
+    manifestPath: string,
+    envName: string,
+    pixi: string,
+): Promise<string> {
+    const shimDir = path.join(projectPath, '.pixi', 'pixi-code-shims', envName);
+    await fs.ensureDir(shimDir);
+
+    if (process.platform === 'win32') {
+        const shimPath = path.join(shimDir, 'python.bat');
+        await fs.writeFile(
+            shimPath,
+            `@echo off\r\n"${pixi}" run --manifest-path "${manifestPath}" -e "${envName}" python %*\r\n`,
+        );
+        return shimPath;
+    }
+
+    const shimPath = path.join(shimDir, 'python');
+    await fs.writeFile(
+        shimPath,
+        `#!/bin/sh\nexec ${quoteSh(pixi)} run --manifest-path ${quoteSh(manifestPath)} -e ${quoteSh(envName)} python "$@"\n`,
+        { mode: 0o755 },
+    );
+    await fs.chmod(shimPath, 0o755);
+    return shimPath;
+}
+
 export async function refreshPixi(projectPath: string): Promise<PixiEnvironment[]> {
     try {
         const pixi = await getPixi();
@@ -111,35 +145,53 @@ export async function refreshPixi(projectPath: string): Promise<PixiEnvironment[
         const projectName = pixiInfo.project_info.name;
         const manifestPath = pixiInfo.project_info.manifest_path;
 
-        const results = await Promise.all(
-            pixiInfo.environments_info.map(async (pixiEnv) => {
+        const lockPath = path.join(path.dirname(manifestPath), 'pixi.lock');
+        if (!(await fs.pathExists(lockPath))) {
+            await _runPixi(pixi, ['lock', '--no-install'], { cwd: projectPath });
+        }
+
+        const results: Array<PixiEnvironment | null> = [];
+        for (const pixiEnv of pixiInfo.environments_info) {
+            try {
                 const pixiPackages = await listPixiPackages(pixiEnv.name, projectPath);
                 const pythonPackage = pixiPackages.find((pkg) => pkg.name === 'python');
 
                 if (!pythonPackage) {
-                    return null;
+                    results.push(null);
+                    continue;
                 }
 
-                const pythonExecutable = (await findPythonExecutable(pixiEnv.prefix)) || '';
+                const envPrefix = path.isAbsolute(pixiEnv.prefix)
+                    ? pixiEnv.prefix
+                    : path.resolve(projectPath, pixiEnv.prefix);
+                const foundPythonExecutable = await findPythonExecutable(envPrefix);
+                const pythonExecutable =
+                    foundPythonExecutable || (await ensurePythonShim(projectPath, manifestPath, pixiEnv.name, pixi));
+                const pixiRunArgs = ['run', '--manifest-path', manifestPath, '-e', pixiEnv.name, 'python'];
 
                 const qualifiedName = `${projectName}:${pixiEnv.name}`;
                 const sv = pythonPackage.version;
 
-                return {
+                results.push({
                     name: `${qualifiedName} (${sv})`,
                     displayName: `${qualifiedName} (${sv})`,
                     shortDisplayName: `${sv} (${qualifiedName})`,
-                    displayPath: pixiEnv.prefix,
+                    displayPath: envPrefix,
                     version: sv,
-                    environmentPath: Uri.file(pixiEnv.prefix),
+                    environmentPath: Uri.file(pythonExecutable),
                     description: 'pixi',
                     tooltip: pythonExecutable,
                     iconPath: new ThemeIcon('python'),
                     execInfo: {
-                        run: { executable: pythonExecutable },
+                        run: foundPythonExecutable
+                            ? { executable: foundPythonExecutable }
+                            : {
+                                  executable: pixi,
+                                  args: pixiRunArgs,
+                              },
                         activatedRun: {
                             executable: pixi,
-                            args: ['run', '--manifest-path', manifestPath, '-e', pixiEnv.name, 'python'],
+                            args: pixiRunArgs,
                         },
                         activation: [
                             {
@@ -149,16 +201,19 @@ export async function refreshPixi(projectPath: string): Promise<PixiEnvironment[
                         ],
                         deactivation: [{ executable: 'exit', args: [] }],
                     },
-                    sysPrefix: pixiEnv.prefix,
+                    sysPrefix: envPrefix,
                     envId: {
-                        id: pixiEnv.prefix,
+                        id: envPrefix,
                         managerId: PIXI_MANAGER_ID,
                     },
                     pixiInfo,
-                    packages: pixiPkgsToPackages(pixiPackages, pixiEnv.prefix),
-                } as PixiEnvironment;
-            }),
-        );
+                    packages: pixiPkgsToPackages(pixiPackages, envPrefix),
+                } as PixiEnvironment);
+            } catch (error) {
+                traceInfo(`Failed to refresh pixi environment ${pixiEnv.name} in ${projectPath}: ${error}`);
+                results.push(null);
+            }
+        }
 
         return results.filter((env): env is PixiEnvironment => env !== null);
     } catch (error) {
