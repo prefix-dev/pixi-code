@@ -4,6 +4,7 @@
 out/**
 node_modules/**
 .pixi/**
+pixi.lock
 src/**
 .gitignore
 .yarnrc
