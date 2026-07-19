@@ -3,6 +3,10 @@
 .vscode-test/**
 out/**
 node_modules/**
+.pixi/**
+pixi.lock
+*.vsix
+*.vsix.zip
 src/**
 .gitignore
 .yarnrc

@@ -28,5 +28,20 @@ export async function findPythonExecutable(envPath: string): Promise<string | nu
             return candidate;
         }
     }
+
+    for (const dir of [path.join(envPath, 'Scripts'), path.join(envPath, 'bin'), envPath]) {
+        if (!(await fs.pathExists(dir))) {
+            continue;
+        }
+
+        const versionedPython = (await fs.readdir(dir))
+            .sort()
+            .find((name) => /^python(\d+(\.\d+)*)?(\.exe)?$/.test(name));
+
+        if (versionedPython) {
+            return path.join(dir, versionedPython);
+        }
+    }
+
     return null;
 }

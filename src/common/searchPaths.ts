@@ -23,9 +23,36 @@ export async function resolvePixiProjectPaths(): Promise<string[]> {
     }
 
     const pixiDirs = await findPixiDirectories(allPatterns);
-    const projectRoots = pixiDirs.map((dir) => path.dirname(dir));
+    const manifestRoots = await findPixiManifestRoots();
+    const projectRoots = [...pixiDirs.map((dir) => path.dirname(dir)), ...manifestRoots];
 
     return [...new Set(projectRoots.map(path.normalize))];
+}
+
+async function findPixiManifestRoots(): Promise<string[]> {
+    const folders = workspace.workspaceFolders;
+    if (!folders) {
+        return [];
+    }
+
+    const patterns = folders.map((folder) => `${folder.uri.fsPath.replace(/\\/g, '/')}/**/pixi.toml`);
+
+    try {
+        const manifests = await fg(patterns, {
+            onlyFiles: true,
+            absolute: true,
+            dot: true,
+            followSymbolicLinks: false,
+            ignore: ['**/.pixi/**'],
+            deep: 10,
+            suppressErrors: true,
+        });
+
+        return manifests.map((manifest) => path.dirname(manifest));
+    } catch (error) {
+        traceError('Error searching for pixi manifests:', error);
+        return [];
+    }
 }
 
 function getWorkspaceSearchPaths(): string[] {
