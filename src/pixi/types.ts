@@ -20,4 +20,5 @@ export interface PixiPackage {
 export interface PixiEnvironment extends PythonEnvironment {
     pixiInfo: PixiInfo;
     packages: Package[];
+    pixiEnvName: string;
 }
