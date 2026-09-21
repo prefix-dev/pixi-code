@@ -1,5 +1,7 @@
 import { Package } from '@vscode/python-environments';
 import * as ch from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 import { CancellationError, CancellationToken, ThemeIcon, Uri, window, workspace } from 'vscode';
 import which from 'which';
 
@@ -27,7 +29,21 @@ export async function getPixi(): Promise<string> {
     const value = config.get<string>('pixiExecutable');
 
     if (value) {
-        return untildify(value);
+        let resolved = untildify(value);
+        if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
+            const firstFolder = workspace.workspaceFolders[0].uri.fsPath;
+            resolved = resolved.replace(/\$\{workspaceFolder\}/g, firstFolder);
+            if (!path.isAbsolute(resolved)) {
+                for (const folder of workspace.workspaceFolders) {
+                    const candidate = path.resolve(folder.uri.fsPath, resolved);
+                    if (fs.existsSync(candidate)) {
+                        resolved = candidate;
+                        break;
+                    }
+                }
+            }
+        }
+        return resolved;
     }
 
     const pixiPath = await findPixi();
@@ -87,7 +103,12 @@ async function _runPixi(
 
 export async function runPixi(args: string[], options?: ch.SpawnOptions, token?: CancellationToken): Promise<string> {
     const pixi = await getPixi();
-    return _runPixi(pixi, args, options, token);
+    const defaultCwd = workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const spawnOptions: ch.SpawnOptions = {
+        ...(defaultCwd ? { cwd: defaultCwd } : {}),
+        ...options,
+    };
+    return _runPixi(pixi, args, spawnOptions, token);
 }
 
 export async function listPixiPackages(envName: string, projectPath: string): Promise<PixiPackage[]> {
@@ -113,7 +134,14 @@ export async function refreshPixi(projectPath: string): Promise<PixiEnvironment[
 
         const results = await Promise.all(
             pixiInfo.environments_info.map(async (pixiEnv) => {
-                const pixiPackages = await listPixiPackages(pixiEnv.name, projectPath);
+                let pixiPackages: PixiPackage[];
+                try {
+                    pixiPackages = await listPixiPackages(pixiEnv.name, projectPath);
+                } catch (error) {
+                    traceInfo(`Skipping Pixi environment '${pixiEnv.name}': ${error}`);
+                    return null;
+                }
+
                 const pythonPackage = pixiPackages.find((pkg) => pkg.name === 'python');
 
                 if (!pythonPackage) {

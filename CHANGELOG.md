@@ -5,6 +5,12 @@ All notable changes to the "pixi-code" extension will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1]
+
+- Fix environment discovery failure when project contains unsupported environments
+- Support relative paths and `${workspaceFolder}` in `pixi-code.pixiExecutable` setting
+- Add error handling to package manager refresh
+
 ## [0.2.0]
 
 - Use published @vscode/python-environments API package

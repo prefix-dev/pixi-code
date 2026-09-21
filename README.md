@@ -43,7 +43,7 @@ The extension will automatically discover Pixi environments and register them wi
 
 ## Extension Settings
 
-- `pixi-code.pixiExecutable`: Path to the Pixi executable. Leave empty to use auto-discovery (default).
+- `pixi-code.pixiExecutable`: Path to the Pixi executable (supports `${workspaceFolder}` and relative paths). Leave empty to use auto-discovery (default).
 
 ## Limitations
 
