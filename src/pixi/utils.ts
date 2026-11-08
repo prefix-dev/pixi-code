@@ -4,7 +4,7 @@ import { CancellationError, CancellationToken, ThemeIcon, Uri, window, workspace
 import which from 'which';
 
 import { createDeferred } from '../common/deferred';
-import { quoteArgs } from '../common/execUtils';
+import { quoteArgs, quoteStringIfNecessary } from '../common/execUtils';
 import { findPythonExecutable } from '../common/findPython';
 import { traceError, traceInfo, traceVerbose } from '../common/logging';
 import { getWorkspacePersistentState } from '../common/persistentState';
@@ -48,7 +48,7 @@ async function _runPixi(
 ): Promise<string> {
     const deferred = createDeferred<string>();
     args = quoteArgs(args);
-    const proc = ch.spawn(pixi, args, { shell: true, ...options });
+    const proc = ch.spawn(quoteStringIfNecessary(pixi), args, { shell: true, ...options });
 
     const cancelDisposable = token?.onCancellationRequested(() => {
         proc.kill();
