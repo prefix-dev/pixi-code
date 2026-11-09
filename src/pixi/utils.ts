@@ -124,6 +124,7 @@ export async function refreshPixi(projectPath: string): Promise<PixiEnvironment[
 
                 const qualifiedName = `${projectName}:${pixiEnv.name}`;
                 const sv = pythonPackage.version;
+                const shellArgs = ['shell', '--manifest-path', manifestPath, '-e', pixiEnv.name];
 
                 return {
                     name: `${qualifiedName} (${sv})`,
@@ -141,12 +142,10 @@ export async function refreshPixi(projectPath: string): Promise<PixiEnvironment[
                             executable: pixi,
                             args: ['run', '--manifest-path', manifestPath, '-e', pixiEnv.name, 'python'],
                         },
-                        activation: [
-                            {
-                                executable: pixi,
-                                args: ['shell', '--manifest-path', manifestPath, '-e', pixiEnv.name],
-                            },
-                        ],
+                        activation: [{ executable: pixi, args: shellArgs }],
+                        // PowerShell treats a quoted path as a string, not a command, so it needs the
+                        // call operator `&` (same approach as the built-in venv and conda managers).
+                        shellActivation: new Map([['pwsh', [{ executable: '&', args: [pixi, ...shellArgs] }]]]),
                         deactivation: [{ executable: 'exit', args: [] }],
                     },
                     sysPrefix: pixiEnv.prefix,
