@@ -13,7 +13,7 @@ Code extension that integrates Pixi environments with the Python Environments ex
 2. **Clone and setup**
 
     ```bash
-    git clone https://github.com/renan-r-santos/pixi-code.git
+    git clone https://github.com/prefix-dev/pixi-code.git
     cd pixi-code
     npm install
     ```

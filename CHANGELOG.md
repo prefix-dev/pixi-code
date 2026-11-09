@@ -5,6 +5,11 @@ All notable changes to the "pixi-code" extension will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+- Publish under the `prefix-dev` publisher (extension ID is now `prefix-dev.pixi-code`)
+- Update dependencies to fix security advisories
+
 ## [0.2.0]
 
 - Use published @vscode/python-environments API package
