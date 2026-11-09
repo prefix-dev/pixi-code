@@ -5,13 +5,13 @@
     "icon": "assets/icon.png",
     "license": "MIT",
     "version": "0.2.0",
-    "homepage": "https://github.com/renan-r-santos/pixi-code",
+    "homepage": "https://github.com/prefix-dev/pixi-code",
     "repository": {
         "type": "git",
-        "url": "https://github.com/renan-r-santos/pixi-code"
+        "url": "https://github.com/prefix-dev/pixi-code"
     },
     "bugs": {
-        "url": "https://github.com/renan-r-santos/pixi-code/issues"
+        "url": "https://github.com/prefix-dev/pixi-code/issues"
     },
     "keywords": [
         "pixi",
@@ -31,7 +31,7 @@
         "workspaceContains:**/pixi.toml",
         "workspaceContains:**/pyproject.toml"
     ],
-    "publisher": "renan-r-santos",
+    "publisher": "prefix-dev",
     "extensionDependencies": [
         "ms-python.vscode-python-envs"
     ],
@@ -85,9 +85,11 @@
         "@types/which": "^3.0.4",
         "@typescript-eslint/eslint-plugin": "^8.59.1",
         "@typescript-eslint/parser": "^8.59.1",
+        "@vscode/vsce": "^4.1.0",
         "eslint": "^10.2.1",
         "eslint-plugin-simple-import-sort": "^13.0.0",
         "eslint-plugin-unused-imports": "^4.4.1",
+        "ovsx": "^1.4.0",
         "prettier": "^3.8.3",
         "ts-loader": "^9.5.7",
         "typescript": "^6.0.3",
@@ -101,5 +103,8 @@
         "fs-extra": "^11.3.4",
         "semver": "^7.7.4",
         "which": "^6.0.1"
+    },
+    "overrides": {
+        "minimatch": "^11.0.1"
     }
 }

@@ -3,7 +3,7 @@
 <img src="./assets/icon.png" alt="VSCode" width="220" height="220">
 
 [![VS Code Marketplace
-Version](https://img.shields.io/visual-studio-marketplace/v/renan-r-santos.pixi-code)](https://marketplace.visualstudio.com/items?itemName=renan-r-santos.pixi-code)
+Version](https://img.shields.io/visual-studio-marketplace/v/prefix-dev.pixi-code)](https://marketplace.visualstudio.com/items?itemName=prefix-dev.pixi-code)
 
 </div>
 
@@ -35,7 +35,7 @@ conda, venv, and other Python environments in VS Code.
 ## Installation
 
 1. Install Pixi on your system
-2. Install [this extension](https://marketplace.visualstudio.com/items?itemName=renan-r-santos.pixi-code) from the VS
+2. Install [this extension](https://marketplace.visualstudio.com/items?itemName=prefix-dev.pixi-code) from the VS
    Code Marketplace
 3. Open a project with a `pixi.toml` or `pyproject.toml` file
 
