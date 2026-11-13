@@ -156,6 +156,7 @@ export async function refreshPixi(projectPath: string): Promise<PixiEnvironment[
                     },
                     pixiInfo,
                     packages: pixiPkgsToPackages(pixiPackages, pixiEnv.prefix),
+                    pixiEnvName: pixiEnv.name,
                 } as PixiEnvironment;
             }),
         );

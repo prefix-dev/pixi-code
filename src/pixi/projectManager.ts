@@ -72,7 +72,7 @@ export class PixiPackageManager implements PackageManager, Disposable {
                 }
 
                 const projectPath = path.dirname(environment.pixiInfo.project_info.manifest_path);
-                const pixiPackages = await listPixiPackages(environment.name, projectPath);
+                const pixiPackages = await listPixiPackages(environment.pixiEnvName, projectPath);
 
                 const before = environment.packages;
                 const after = pixiPkgsToPackages(pixiPackages, environment.envId.id);
